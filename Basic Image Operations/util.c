@@ -2,7 +2,7 @@
 
 #include "util.h"
 
-// readImage(fileName, image) - Read an image
+
 int readImage(const char *filename, Image *image)
 {
 
@@ -60,7 +60,7 @@ int readImage(const char *filename, Image *image)
 
     for (int row = 0; row < image->height; row++) {
 
-       unsigned char *src = pixels + ((IH.biHeight > 0) ? (image->height - 1 - row) * row_size : row * row_size);
+        unsigned char *src = pixels + ((IH.biHeight > 0) ? (image->height - 1 - row) * row_size : row * row_size);
         unsigned char *dst = image->pixels + row * image->width * 3;
         for (int x = 0; x < image->width * 3; x++) {
             dst[x] = src[x];
@@ -73,6 +73,60 @@ int readImage(const char *filename, Image *image)
 
 
 // writeImage(fileName, image) - Write an image
+int writeImage(const char *fileName, Image *image)
+{
+    FILE *file_ptr = fopen(fileName, "rb");
+    if (!file_ptr) {
+        perror("Failed to open file");
+        return 0;
+    }
+
+    int width = image->width, height = image->height;
+    int row_size = ((width * 3 + 3) & ~3);
+    int padding_bytes = row_size - width * 3;
+
+    uint32_t file_size = sizeof(File_Header) + sizeof(Info_Header) + (uint32_t)row_size * height;
+
+    // Prepare file header
+    File_Header fh = {0};
+    fh.bfType = 0x4D42; // 'BM'
+    fh.bfSize = file_size;
+    fh.bfOffBits = sizeof(File_Header) + sizeof(Info_Header);
+
+    // Prepare info header
+    Info_Header ih = {0};
+    ih.biSize = sizeof(Info_Header);
+    ih.biWidth = width;
+    ih.biHeight = height; // Positive = bottom-up storage
+    ih.biPlanes = 1;
+    ih.biBitCount = 24;
+    ih.biCompression = 0;
+    ih.biSizeImage = (uint32_t)row_size * height;
+
+    // Write headers
+    if (fwrite(&fh, sizeof(fh), 1, fp) != 1 || fwrite(&ih, sizeof(ih), 1, fp) != 1) {
+        fclose(fp);
+        return 0;
+    }
+
+    // Write pixel data (bottom-up order for BMP)
+    unsigned char pad[3] = {0,0,0};
+    for (int r = height - 1; r >= 0; --r) {
+        fwrite(image->pixels + (size_t)r * image->stride, 1, (size_t)image->stride, file_ptr);
+        if (padding_bytes) fwrite(pad, 1, (size_t)padding_bytes, file_ptr);
+    }
+
+    fclose(file_ptr);
+    return 0;
+
+}
+
+
+int index(const Image *image, int r, int c, int ch)
+{
+    return (r * image->stride) + (c * image->channels) + ch;
+}
+
 
 // getImageInfo(noRows, noCols, maxVal) - Show image info
 
