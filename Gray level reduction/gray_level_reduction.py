@@ -9,16 +9,6 @@ GRAY_IMG_PATH = "E:\CodeSpace\GitHub\Computer-Vision-and-Image-Processing\Gray l
 reduction_levels = [128, 64, 32, 16, 8, 4, 2]
 
 
-# Objectives
-
-# 5. Uniform vs Non Uniform quatization.
-# 6. Restore compressed image ( as gray level reduction used for compression ).
-
-
-
-
-
-
 # Image read and display
 rgb_input_image = cv2.imread(RGB_IMG_PATH)
 rgb_input_image_rgb = cv2.cvtColor(rgb_input_image, cv2.COLOR_BGR2RGB)
