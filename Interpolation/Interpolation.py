@@ -102,29 +102,26 @@ def crop_center(image, crop_size=100):
     return image[y1:y2, x1:x2]
 
 if __name__ == "__main__":
-    SOURCE = r"E:\CodeSpace\GitHub\Computer-Vision-and-Image-Processing\Interpolation\lena_color.png"  # Update this with your image path
+    SOURCE = r"E:\CodeSpace\GitHub\Computer-Vision-and-Image-Processing\Interpolation\lena_color.png"
     
     image = read_image(SOURCE)
     methods = ["Nearest", "Bilinear"]
     factors = [2, 4]
     
-    # Create figure with subplots: 3 methods x 5 columns (original + 2x full + 2x crop + 4x full + 4x crop)
-    fig, axes = plot.subplots(len(methods), 5, figsize=(20, 12))
+    figure, axes = plot.subplots(len(methods), 5, figsize=(20, 12))
     
-    # Add original image in the first column (only for the first row)
     axes[0, 0].imshow(image)
     axes[0, 0].set_title(f"Original\n({image.shape[1]}x{image.shape[0]})")
     axes[0, 0].axis("off")
     
-    # Hide original image cells for other methods
     for i in range(1, len(methods)):
         axes[i, 0].axis("off")
     
     for i, method in enumerate(methods):
-        col_idx = 1  # Start from column 1 (after original)
+        col_idx = 1 
         
         for factor in factors:
-            # Apply interpolation
+
             if method == "Nearest":
                 result = nearest_neighbour(image, factor)
             elif method == "Bilinear":
