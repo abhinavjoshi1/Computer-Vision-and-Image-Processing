@@ -205,6 +205,7 @@ Image sharpenImage(const Image *input)
     return conv3x3(input, K, 1.0f, 0.0f);
 }
 
+
 Image blurImage(const Image *input)
 {
     float K[3][3] = {{1,1,1},{1,1,1},{1,1,1}};
@@ -322,6 +323,7 @@ void contrastEnhance(Image *image)
     }
 }
 
+
 void reduceGrayLevels(Image *image, int levels)
 {
     if (levels <= 1)
@@ -366,6 +368,7 @@ Image rotate90(const Image *image)
     return output;
 }
 
+
 Image rotate180(const Image *image)
 {
     // 180 degree rotate
@@ -375,7 +378,6 @@ Image rotate180(const Image *image)
     {
         for (int col = 0; col < image->width; col++)
         {
-            // 90-degree rotation mapping: (row,col) -> (col, height-1-row)
             int rr = image->height - 1 - row;
             int cc = image->width - 1 - col;
 

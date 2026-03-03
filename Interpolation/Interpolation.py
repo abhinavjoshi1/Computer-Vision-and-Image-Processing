@@ -68,10 +68,10 @@ def bilinear_interpolation(input_image, factor):
             
             for channel in range(image_channel):
                 
-                Q11 = int(image[i1][j1][channel])
-                Q12 = int(image[i1][j2][channel])
-                Q21 = int(image[i2][j1][channel])
-                Q22 = int(image[i2][j2][channel])
+                Q11 = int(input_image[i1][j1][channel])
+                Q12 = int(input_image[i1][j2][channel])
+                Q21 = int(input_image[i2][j1][channel])
+                Q22 = int(input_image[i2][j2][channel])
                 
                 hor_inter_1 = Q11*(1 - dj) + Q12*dj
                 hor_inter_2 = Q21*(1 - dj) + Q22*dj
@@ -82,15 +82,49 @@ def bilinear_interpolation(input_image, factor):
                 
     return result_image
                 
-                
-def bicubic_interpolation(input_image, factor):
-    pass
-    
+            
+def cubic_interpolate(p0, p1, p2, p3, x):
+    return (p1 + 0.5 * x * (p2 - p0 + x * (2*p0 - 5*p1 + 4*p2 - p3 +
+           x * (3*(p1 - p2) + p3 - p0))))
+        
+def bicubic_interpolation(input_image, zoom_factor):
+    h, w, c = input_image.shape
+    new_h, new_w = int(h * zoom_factor), int(w * zoom_factor)
+
+    zoomed = [[[0]*c for _ in range(new_w)] for _ in range(new_h)]
+
+    for i in range(new_h):
+        for j in range(new_w):
+            orig_i = i / zoom_factor
+            orig_j = j / zoom_factor
+
+            i_int = int(orig_i)
+            j_int = int(orig_j)
+            di = orig_i - i_int
+            dj = orig_j - j_int
+
+            for ch in range(c):
+                pixels = []
+                for di_offset in range(-1, 3):
+                    row = []
+                    for dj_offset in range(-1, 3):
+                        ni = max(0, min(h - 1, i_int + di_offset))
+                        nj = max(0, min(w - 1, j_int + dj_offset))
+                        row.append(int(input_image[ni][nj][ch]))
+                    pixels.append(row)
+
+                # interpolate rows in x
+                temp = [cubic_interpolate(row[0], row[1], row[2], row[3], dj) for row in pixels]
+                # interpolate in y
+                value = cubic_interpolate(temp[0], temp[1], temp[2], temp[3], di)
+                value = max(0, min(255, int(round(value))))
+                zoomed[i][j][ch] = value
+    return zoomed
     
 
-def crop_center(image, crop_size=100):
-    """Crop a square region from the center of the image"""
-    h, w = image.shape[:2]
+def crop_center(input_image, crop_size=100):
+    
+    h, w = input_image.shape[:2]
     center_x, center_y = w // 2, h // 2
     half_crop = crop_size // 2
     
@@ -99,19 +133,19 @@ def crop_center(image, crop_size=100):
     y1 = max(0, center_y - half_crop)
     y2 = min(h, center_y + half_crop)
     
-    return image[y1:y2, x1:x2]
+    return input_image[y1:y2, x1:x2]
 
 if __name__ == "__main__":
     SOURCE = r"E:\CodeSpace\GitHub\Computer-Vision-and-Image-Processing\Interpolation\lena_color.png"
     
-    image = read_image(SOURCE)
+    input_image = read_image(SOURCE)
     methods = ["Nearest", "Bilinear"]
     factors = [2, 4]
     
     figure, axes = plot.subplots(len(methods), 5, figsize=(20, 12))
     
-    axes[0, 0].imshow(image)
-    axes[0, 0].set_title(f"Original\n({image.shape[1]}x{image.shape[0]})")
+    axes[0, 0].imshow(input_image)
+    axes[0, 0].set_title(f"Original\n({input_image.shape[1]}x{input_image.shape[0]})")
     axes[0, 0].axis("off")
     
     for i in range(1, len(methods)):
@@ -123,11 +157,11 @@ if __name__ == "__main__":
         for factor in factors:
 
             if method == "Nearest":
-                result = nearest_neighbour(image, factor)
+                result = nearest_neighbour(input_image, factor)
             elif method == "Bilinear":
-                result = bilinear_interpolation(image, factor)
+                result = bilinear_interpolation(input_image, factor)
             elif method == "Bicubic":
-                result = bicubic_interpolation(image, factor)
+                result = bicubic_interpolation(input_image, factor)
             
             # Full upscaled image
             axes[i, col_idx].imshow(result)
