@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 # Objectives 
 # 1. Histogram Equalisation
 # 2. Histogram Specialisation
-# 
 
 
 def histogram_equalization(image):
